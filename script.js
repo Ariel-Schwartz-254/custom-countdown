@@ -13,7 +13,7 @@ const completeBtn = document.getElementById('complete-button');
 
 let countdownTitle = '';
 let countdownDate = '';
-let countdownValue = Date;
+let countdownValue = new Date();
 let countdownActive;
 let savedCountdown;
 
@@ -43,15 +43,31 @@ function displayCountdownComplete() {
     completeEl.hidden = false;
 }
 
+function calculateTimeUnits() {
+    const now = new Date().getTime();
+    const distance = countdownValue - now;
+    const days = Math.floor(distance / day);
+    const hours = Math.floor((distance % day) / hour);
+    const minutes = Math.floor((distance % hour) / minute);
+    const seconds = Math.floor((distance % minute) / second);
+
+    return { distance, days, hours, minutes, seconds};
+}
+
+function populateCountdown(timeUnits) {
+    const { days, hours, minutes, seconds } = timeUnits;
+    countdownElTitle.textContent = countdownTitle;
+    timeElements[0].textContent = days;
+    timeElements[1].textContent = hours;
+    timeElements[2].textContent = minutes;
+    timeElements[3].textContent = seconds;
+}
+
 // Populate Countdown / Complete UI
 function updateDOM() {
     countdownActive = setInterval(() => {
-        const now = new Date().getTime();
-        const distance = countdownValue - now;
-        const days = Math.floor(distance / day);
-        const hours = Math.floor((distance % day) / hour);
-        const minutes = Math.floor((distance % hour) / minute);
-        const seconds = Math.floor((distance % minute) / second);
+        const timeUnits = calculateTimeUnits();
+        const { distance } = timeUnits;
 
         // Check if countdown is complete
         if (distance < 0) {
@@ -59,12 +75,7 @@ function updateDOM() {
             clearInterval(countdownActive);
             completeElInfo.textContent = `${countdownTitle} finished on ${countdownDate}`;
         } else {
-            // Populate Countdown
-            countdownElTitle.textContent = countdownTitle;
-            timeElements[0].textContent = days;
-            timeElements[1].textContent = hours;
-            timeElements[2].textContent = minutes;
-            timeElements[3].textContent = seconds;
+            populateCountdown(timeUnits);
             displayCountdown();
         }
     }, 1000);
@@ -80,7 +91,6 @@ function updateCountdown(event) {
         title: countdownTitle,
         date: countdownDate
     }
-    console.log(savedCountdown);
     localStorage.setItem('countdown', JSON.stringify(savedCountdown));
     // Get number version of current date, update DOM
     countdownValue = new Date(countdownDate).getTime();
@@ -101,7 +111,6 @@ function restorePreviousCountdown() {
     // Get counutdown from local storage if available
     const savedCountdown = JSON.parse(localStorage.getItem('countdown'))
     if(savedCountdown) {
-        console.log('Previous Countdown is in local storage!');
         inputContainer.hidden = true;
         countdownTitle = savedCountdown.title;
         countdownDate = savedCountdown.date;
